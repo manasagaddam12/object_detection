@@ -1,0 +1,42 @@
+from ultralytics import YOLO
+import cv2
+import matplotlib.pyplot as plt
+import os
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
+model = YOLO('yolov8n.pt') 
+Tk().withdraw()
+print("Please select an image from the dataset folder.")
+image_path = askopenfilename(title="Select an image",
+                             filetypes=[("Image files", "*.jpg *.jpeg *.png")])
+if not image_path:
+    print(" No image selected. Exiting...")
+    exit()
+
+print("Selected image:", image_path)
+img = cv2.imread(image_path)
+if img is None:
+    print("Could not read the image. Exiting...")
+    exit()
+results = model(image_path)
+for r in results:
+    boxes = r.boxes.xyxy
+    classes = r.boxes.cls
+    confidences = r.boxes.conf
+
+    for box, cls, conf in zip(boxes, classes, confidences):
+        x1, y1, x2, y2 = map(int, box)
+        label = model.names[int(cls)]
+        confidence = float(conf)
+
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.putText(img, f"{label} {confidence:.2f}", (x1, y1 - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+plt.axis("off")
+plt.title("Vehicle Detection Output")
+plt.show()
+folder, filename = os.path.split(image_path)
+output_path = os.path.join(folder, f"detected_{filename}")
+cv2.imwrite(output_path, img)
+print(" Detection complete! Output saved as:", output_path)
