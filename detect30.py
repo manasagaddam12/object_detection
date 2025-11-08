@@ -6,7 +6,9 @@ import json
 import random
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
+
 model = YOLO('yolov8n.pt')
+
 Tk().withdraw()
 print("Please select an image from the dataset folder.")
 image_path = askopenfilename(title="Select an image",
@@ -32,6 +34,7 @@ if os.path.exists(memory_file):
 else:
     previous_data = []
 
+
 reuse_count = int(len(previous_data) * 0.3)
 reuse_data = random.sample(previous_data, reuse_count) if reuse_count > 0 else []
 
@@ -47,24 +50,25 @@ for r in results:
         label = model.names[int(cls)]
         confidence = float(conf)
 
-        
+  
         cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
         cv2.putText(img, f"{label} {confidence:.2f}", (x1, y1 - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
+     
         current_detections.append({
             "label": label,
             "confidence": confidence
         })
 
-for old in reuse_data:
-    fake_conf = old["confidence"] * 1.05  # simulate learning boost
-    print(f"Reusing learned data: {old['label']} (Improved conf: {fake_conf:.2f})")
 
+for old in reuse_data:
+    fake_conf = old["confidence"] * 1.05  
+    print(f"Reusing learned data: {old['label']} (Improved conf: {fake_conf:.2f})")
 
 combined_data = previous_data + current_detections
 with open(memory_file, "w") as f:
-    json.dump(combined_data[-100:], f, indent=4)  # keep last 100 records only
+    json.dump(combined_data[-100:], f, indent=4) 
 
 plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 plt.axis("off")
@@ -77,4 +81,3 @@ cv2.imwrite(output_path, img)
 
 print("Detection complete! Output saved as:", output_path)
 print("Updated learning memory stored in:", memory_file)
-
